@@ -1,0 +1,16 @@
+version: '3.0'
+
+services:
+  service-a:
+    build: .
+    container_name: go-otel-service-a
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+  
+  service-b:
+    build: .
+    container_name: go-otel-service-b
+    volumes:
+      - .:/app
