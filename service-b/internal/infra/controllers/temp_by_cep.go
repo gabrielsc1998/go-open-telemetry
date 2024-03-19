@@ -7,9 +7,14 @@ import (
 	"github.com/gabrielsc1998/go-open-telemetry/package/domain"
 	viacep_gateway "github.com/gabrielsc1998/go-open-telemetry/service-b/internal/infra/gateways/viacep"
 	weather_api_gateway "github.com/gabrielsc1998/go-open-telemetry/service-b/internal/infra/gateways/weather-api"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type TempByCepController struct {
+	tracer            trace.Tracer
+	otelRequestName   string
 	viacepGateway     *viacep_gateway.ViaCepGateway
 	weatherApiGateway *weather_api_gateway.WeatherAPIGateway
 }
@@ -21,14 +26,27 @@ type TempByCepControllerDtoOutput struct {
 	TempK float64 `json:"temp_K"`
 }
 
-func NewTempByCepController(viacepGateway *viacep_gateway.ViaCepGateway, weatherApiGateway *weather_api_gateway.WeatherAPIGateway) *TempByCepController {
+func NewTempByCepController(
+	viacepGateway *viacep_gateway.ViaCepGateway,
+	weatherApiGateway *weather_api_gateway.WeatherAPIGateway,
+	tracer trace.Tracer,
+	otelRequestName string,
+) *TempByCepController {
 	return &TempByCepController{
 		viacepGateway:     viacepGateway,
 		weatherApiGateway: weatherApiGateway,
+		tracer:            tracer,
+		otelRequestName:   otelRequestName,
 	}
 }
 
 func (c *TempByCepController) Handle(w http.ResponseWriter, r *http.Request) {
+	carrier := propagation.HeaderCarrier(r.Header)
+	ctx := r.Context()
+	ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
+	_, span := c.tracer.Start(ctx, c.otelRequestName)
+	defer span.End()
+
 	receivedCep := r.URL.Query().Get("cep")
 
 	_, err := domain.NewCep(receivedCep)
