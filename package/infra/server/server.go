@@ -6,8 +6,9 @@ import (
 )
 
 type Server struct {
-	Port string
-	mux  *http.ServeMux
+	Port        string
+	mux         *http.ServeMux
+	middlewares []http.HandlerFunc
 }
 
 func NewServer(port string) *Server {
@@ -16,7 +17,12 @@ func NewServer(port string) *Server {
 }
 
 func (s *Server) AddRoute(method string, path string, handler http.HandlerFunc) {
-	s.mux.HandleFunc(method+" "+path, handler)
+	s.mux.HandleFunc(method+" "+path, func(w http.ResponseWriter, r *http.Request) {
+		for _, middleware := range s.middlewares {
+			middleware(w, r)
+		}
+		handler(w, r)
+	})
 }
 
 func (s *Server) Start() {
