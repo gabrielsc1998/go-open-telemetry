@@ -8,6 +8,7 @@ import (
 	opentelemetry "github.com/gabrielsc1998/go-open-telemetry/package/infra/open-telemetry"
 	"github.com/gabrielsc1998/go-open-telemetry/package/infra/server"
 	"github.com/gabrielsc1998/go-open-telemetry/service-a/internal/infra/controllers"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -37,6 +38,7 @@ func main() {
 
 	tempByCepController := controllers.NewTempByCepController(tracer, config.ServiceAOtelRequestName)
 	webserver.AddRoute("POST", "/temp-by-cep", tempByCepController.Handle)
+	webserver.AddHandler("GET", "/metrics", promhttp.Handler())
 
 	webserver.Start()
 }

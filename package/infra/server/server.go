@@ -25,6 +25,10 @@ func (s *Server) AddRoute(method string, path string, handler http.HandlerFunc) 
 	})
 }
 
+func (s *Server) AddHandler(method string, path string, handler http.Handler) {
+	s.mux.Handle(method+" "+path, handler)
+}
+
 func (s *Server) Start() {
 	fmt.Println("Server running on port", s.Port)
 	err := http.ListenAndServe(":"+s.Port, s.mux)

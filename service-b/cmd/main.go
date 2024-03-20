@@ -10,6 +10,7 @@ import (
 	"github.com/gabrielsc1998/go-open-telemetry/service-b/internal/infra/controllers"
 	viacep_gateway "github.com/gabrielsc1998/go-open-telemetry/service-b/internal/infra/gateways/viacep"
 	weather_api_gateway "github.com/gabrielsc1998/go-open-telemetry/service-b/internal/infra/gateways/weather-api"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -46,6 +47,7 @@ func main() {
 		config.ServiceBOtelRequestName,
 	)
 	webserver.AddRoute("GET", "/temp-by-cep", tempByCepController.Handle)
+	webserver.AddHandler("GET", "/metrics", promhttp.Handler())
 
 	webserver.Start()
 }
