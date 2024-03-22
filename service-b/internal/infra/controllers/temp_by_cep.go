@@ -55,17 +55,31 @@ func (c *TempByCepController) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// ----- Get Address ----- //
+
+	_, spanGetAddress := c.tracer.Start(ctx, c.otelRequestName+"-get-address")
+
 	address, err := c.viacepGateway.GetAddressByCep(receivedCep)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	spanGetAddress.End()
+
+	// ----- Get Temperature ----- //
+
+	_, spanGetTemp := c.tracer.Start(ctx, c.otelRequestName+"-get-temp")
+
 	temperature, err := c.weatherApiGateway.GetTemperatureByCity(address.City)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	spanGetTemp.End()
+
+	// ----- Response ----- //
 
 	temperatureDto := TempByCepControllerDtoOutput{
 		City:  address.City,
